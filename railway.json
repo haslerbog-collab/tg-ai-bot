@@ -1,0 +1,7 @@
+{
+    "deploy": {
+      "startCommand": "npx tsx src/index.ts",
+      "healthcheckPath": "/health",
+      "restartPolicyType": "ON_FAILURE"
+    }
+  }

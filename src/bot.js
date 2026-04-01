@@ -3,13 +3,17 @@ import { Bot, InputFile } from "grammy";
   import { addToHistory, getHistory, resetChat, updateChatMeta, systemPrompt, conversationHistory } from "./shared-state.js";
 
   if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN not set");
-  if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY not set");
+  if (!process.env.OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY not set");
 
   export const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
 
-  const groq = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: "https://api.groq.com/openai/v1",
+  const ai = new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+    defaultHeaders: {
+      "HTTP-Referer": "https://github.com/haslerbog-collab/tg-ai-bot",
+      "X-Title": "Telegram AI Bot",
+    },
   });
 
   const imageClient = process.env.OPENAI_API_KEY
@@ -53,18 +57,17 @@ import { Bot, InputFile } from "grammy";
 
   export async function handleImage(ctx, prompt) {
     if (!imageClient) {
-      await ctx.reply("Image generation requires an OpenAI API key. Contact the bot admin to enable it.");
+      await ctx.reply("Для генерации изображений нужен OpenAI API ключ. Попросите администратора бота включить эту функцию.");
       return;
     }
-    const msg = await ctx.reply("Generating your image... 🎨");
+    const msg = await ctx.reply("Генерирую изображение... 🎨");
     try {
       const response = await imageClient.images.generate({ model: "dall-e-3", prompt, n: 1, size: "1024x1024", response_format: "b64_json" });
-      const b64 = response.data[0].b64_json;
-      const buffer = Buffer.from(b64, "base64");
-      await ctx.replyWithPhoto(new InputFile(buffer, "image.png"), { caption: "Here you go! 🖼️" });
+      const buffer = Buffer.from(response.data[0].b64_json, "base64");
+      await ctx.replyWithPhoto(new InputFile(buffer, "image.png"), { caption: "Готово! 🖼️" });
     } catch (err) {
       console.error("Image error:", err);
-      await ctx.reply("Couldn't generate that image. Try a different description?");
+      await ctx.reply("Не удалось создать изображение. Попробуй другое описание?");
     } finally {
       try { await ctx.api.deleteMessage(ctx.chat.id, msg.message_id); } catch {}
     }
@@ -86,8 +89,8 @@ import { Bot, InputFile } from "grammy";
     addToHistory(chatId, "user", text);
 
     try {
-      const resp = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+      const resp = await ai.chat.completions.create({
+        model: "meta-llama/llama-3.3-70b-instruct:free",
         messages: [{ role: "system", content: systemPrompt }, ...getHistory(chatId)],
         max_tokens: 1024,
       });

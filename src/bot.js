@@ -5,8 +5,8 @@ import { Bot, InputFile } from "grammy";
   const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
-  if (!TOKEN) { console.error("TELEGRAM_BOT_TOKEN not set"); process.exit(1); }
-  if (!OPENROUTER_KEY) { console.error("OPENROUTER_API_KEY not set"); process.exit(1); }
+  if (!TOKEN) throw new Error("TELEGRAM_BOT_TOKEN not set");
+  if (!OPENROUTER_KEY) throw new Error("OPENROUTER_API_KEY not set");
 
   export const bot = new Bot(TOKEN);
 
@@ -35,12 +35,12 @@ import { Bot, InputFile } from "grammy";
     const name = ctx.from?.first_name || "there";
     resetChat(ctx.chat.id);
     updateChatMeta(ctx.chat.id, { title: name, username: ctx.from?.username, lastSeen: new Date() });
-    await ctx.reply("Hey " + name + "! I'm here to chat and help out. Ask me anything!");
+    await ctx.reply("Hey " + name + "! I am here to chat and help out. Ask me anything!");
   });
 
   bot.command("reset", async (ctx) => {
     resetChat(ctx.chat.id);
-    await ctx.reply("Fresh start! What's on your mind?");
+    await ctx.reply("Fresh start! What is on your mind?");
   });
 
   bot.command("imagine", async (ctx) => {
@@ -59,10 +59,10 @@ import { Bot, InputFile } from "grammy";
     try {
       const res = await imageClient.images.generate({ model: "dall-e-3", prompt, n: 1, size: "1024x1024", response_format: "b64_json" });
       const buf = Buffer.from(res.data[0].b64_json, "base64");
-      await ctx.replyWithPhoto(new InputFile(buf, "image.png"), { caption: "Here you go! 🖼️" });
+      await ctx.replyWithPhoto(new InputFile(buf, "image.png"), { caption: "Here you go!" });
     } catch (err) {
       console.error("Image error:", err.message);
-      await ctx.reply("Couldn't generate that image. Try a different description?");
+      await ctx.reply("Could not generate that image. Try a different description?");
     } finally {
       try { await ctx.api.deleteMessage(ctx.chat.id, msg.message_id); } catch {}
     }
@@ -89,7 +89,7 @@ import { Bot, InputFile } from "grammy";
         messages: [{ role: "system", content: systemPrompt }, ...getHistory(chatId)],
         max_tokens: 1024,
       });
-      const reply = resp.choices[0]?.message?.content || "I'm not sure what to say!";
+      const reply = resp.choices[0]?.message?.content || "I am not sure what to say!";
       addToHistory(chatId, "assistant", reply);
       await ctx.reply(reply);
     } catch (err) {

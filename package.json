@@ -1,0 +1,12 @@
+{
+    "name": "tg-ai-bot",
+    "version": "1.0.0",
+    "scripts": {
+      "start": "npx tsx src/index.ts"
+    },
+    "dependencies": {
+      "grammy": "^1.36.3",
+      "openai": "^4.95.0",
+      "tsx": "^4.19.4"
+    }
+  }
